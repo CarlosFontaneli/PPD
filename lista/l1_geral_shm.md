@@ -385,8 +385,49 @@ calc(int start, int finish)
 
 ## Como são definidas variáveis privadas para cada thread de uma região paralela?
 
+Se a questão é apenas o fato de que cada thread deve ter sua própria cópia desta variável, sem que o valor de dada uma delas tenha que ser visível pelas demais threads, basta fazer com que essa variável seja privada. Isso é feito através da cláusula private, usada na diretiva de criação da região paralela.
+
+```c
+ #pragma omp parallel private( num )
+```
+
+Se ela for de controle, o compilador com suporte a OpenMP, automaticamente, faz com que a variável de controle de um parallel for seja privada para cada thread, e vai tratar também de ajustar o código de cada thread para a atribuição do valor inicial apropriado e determinar o limite e o passo para cada iteração.
+
 ## Como são definidas variáveis compartilhadas entre as threads de uma região paralela?
+
+# Conferir essa resposta
+
+Basta não especificar que ela é privada.
 
 ## Como é possível prover exclusão mútua na manipulação de variáveis compartilhas entre as threads de uma região paralela?
 
+Uma das formas de garantir que a escrita a uma variável compartilhada dentro de uma região paralela ocorra com exclusão mútua é usar um mecanismo de região crítica, como ilustrado a seguir, com a diretiva critical :
+
+```c
+#pragma omp critical
+ num = ...;
+```
+
+Usada dentro de uma região paralela, a diretiva critical faz com que o bloco de código a seguir seja executado com exclusão mútua, por todas as threads do time, mas por uma thread de cada vez.
+
 ## Para que serve e como funciona a primitiva atomic em OpenMP?
+
+The atomic construct ensures that a specific storage location is accessed atomically, rather than exposing it to the possibility of multiple, simultaneous reading and writing threads that may result in indeterminate values.
+
+In the following syntax, atomic-clause is a clause that indicates the semantics for which atomicity is enforced and is one of the following:
+
+- read
+- write
+- update
+- capture
+
+```c
+#pragma omp atomic [ seq_cst [ , ]] atomic-clause [[ , ] seq_cst ] new-line
+   expression-stmt
+or
+#pragma omp atomic [ seq_cst ] new-line
+   expression-stmt
+or
+#pragma omp atomic [ seq_cst [ , ]] capture [[ , ] seq_cst ] new-line
+   structured-block
+```
